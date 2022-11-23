@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime
 
 from APIs import config
 
@@ -24,8 +25,22 @@ def get_token(access_code):
     response = requests.post(get_token_url, headers=get_token_headers,
                        data=payload)
     r_json = response.json()
-    access_token = r_json['access_token']
-    return access_token
+    result = {'access_token': r_json['access_token'], 'refresh_token':\
+                r_json['refresh_token'], 'start_time': datetime.now()}
+    return result
+
+def refresh_token(refresh_token):
+    get_token_url = 'https://api.kroger.com/v1/connect/oauth2/token'
+    get_token_headers = {'Content-Type': 'application/x-www-form-urlencoded',\
+                         'Authorization': f'Basic'
+                                          f' {config.kroger_encoded_client_info}'}
+    payload = {'grant_type': 'refresh_token', 'refresh_token': refresh_token}
+    response = requests.post(get_token_url, headers=get_token_headers,\
+                       data=payload)
+    r_json = response.json()
+    result = {'access_token': r_json['access_token'], 'refresh_token':\
+                r_json['refresh_token'], 'start_time': datetime.now()}
+    return result
 
 def add_to_cart(access_token, upc, quantity):
     get_token_url = 'https://api.kroger.com/v1/cart/add'
