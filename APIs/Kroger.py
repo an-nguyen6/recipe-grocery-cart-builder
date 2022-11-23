@@ -2,17 +2,14 @@ import requests
 import json
 from APIs import config
 
-
-# determine closest Kroger location to user
-# check product availability
-
 def auth_client():
     url = 'https://api.kroger.com/v1/connect/oauth2/token'
     headers = {'Content-Type': 'application/x-www-form-urlencoded',
                'Authorization': f"Basic {config.kroger_encoded_client_info}"}
     data = {'grant_type': 'client_credentials', 'scope': 'product.compact'}
     response = requests.post(url, headers=headers, data=data)
-    return response.json()['access_token']
+    access_token = response.json()['access_token']
+    return access_token
 
 def get_Kroger_location(zipcode=None, chain=None):
     # check db for access_token. if not there, then run auth_client
@@ -35,6 +32,40 @@ def get_Kroger_location(zipcode=None, chain=None):
     result = stores['data']
     return result
 
-def check_product_availability(product=None, location_id=None):
-    return None
 
+def check_product_availability(product=None, location_id=None):
+    if product is None:
+        return "Please enter product"
+    if location_id is None:
+        return "Please enter location"
+
+    # check db for access token
+    access_token = auth_client()
+    url = 'https://api.kroger.com/v1/products'
+    headers = {'Accept': 'application/json', 'Authorization': f"Bearer "
+                                                              f"{access_token}"}
+    query_string = {'filter.term': f"{product}", 'filter.locationId':\
+                        f"{location_id}", 'filter.limit': '5'}
+
+    response = requests.get(url, headers=headers, params=query_string)
+    response_json = response.json()
+
+    products = response_json['data']
+    for product in products:
+        item = {'Name': product['description']}
+        inventory_details = product['items'][0]
+        try:
+            # print(inventory_details['inventory']['stockLevel'])
+            if inventory_details['inventory']['stockLevel'] != \
+                    'TEMPORARILY_OUT_OF_STOCK':
+                item['productId'] = product['productId']
+                return True, item
+            elif any([value for key, value in inventory_details['fulfillment'].items()]):
+                item['fulfillment_options'] = [key for key, value in
+                                               inventory_details['fulfillment'].items() if value]
+                item['productId'] = product['productId']
+                return True, item
+        except KeyError:
+            return response_json, False, {}
+
+    return response_json, False, {}
