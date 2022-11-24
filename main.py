@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
-from APIs import FoodData, KrogerCustomer, config
+from APIs import FoodData, KrogerCustomer, Kroger
 from datetime import datetime
 
 app = FastAPI()
 
 class GroceryItem(BaseModel):
-    upc: str
+    item: str
     quantity: int
 
 db = {}
@@ -67,23 +67,49 @@ def kroger_add_cart_successful():
 def kroger_add_cart_error():
     return 'There was an error adding to cart!'
 
+# for testing purposes only
 @app.get('/Kroger/all-codes')
 def get_kroger_tokens():
     return db
 
-@app.post('/Kroger/add-to-cart')
-def add_to_cart(grocery_item: GroceryItem):
+
+@app.post('/Kroger/set-preferred-location')
+def set_preferred_location(zipcode, chain):
+    preferred_location = Kroger.get_Kroger_location(zipcode, chain)
+    db['preferred_location_id'] = preferred_location['locationId']
+    db['preferred_location_chain'] = preferred_location['chain']
+    db['preferred_location_address'] = preferred_location['address']
+    return db['preferred_location_id']
+
+
+@app.get('/Kroger/add-to-cart/')
+def add_to_cart(item: str, quantity: int, zipcode: str=None, chain: str=None):
+    # if no preferred location, get location using zipcode and chain and save
+    # check product availability at preferred location id
+    # if available, then add to cart
+
     # check if token is expired. if so, make refresh token call
     time_diff = datetime.now() - db['kroger_access_token_start']
     if time_diff.total_seconds() >= 1740:
         refresh_kroger_token()
-        db['refreshed'] = 1
+        db['refreshed'] += 1
 
-    kroger_response = KrogerCustomer.add_to_cart(db['kroger_access_token'],
-                                   grocery_item.upc, grocery_item.quantity)
-
-    if kroger_response.status_code > 200 and kroger_response.status_code < 300:
-        return grocery_item.upc
+    if 'preferred_location' in db:
+        location_id = db['preferred_location']
+    elif zipcode is None or chain is None:
+        return "no preferred location please add zip and chain"
     else:
-        return "error"
+        location_id = set_preferred_location(zipcode, chain)
+
+    availability_details = Kroger.check_product_availability(item, location_id)
+
+    if availability_details[0]:
+        product_id = availability_details[1]['productId']
+        kroger_response = KrogerCustomer.add_to_cart(db['kroger_access_token'],
+                                       product_id, quantity)
+
+        if 200 < kroger_response.status_code < 300:
+            return f"{item} added"
+        else:
+            return "error adding to cart"
 

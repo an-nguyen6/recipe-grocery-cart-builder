@@ -22,7 +22,7 @@ def get_Kroger_location(zipcode=None, chain=None):
     headers = {'Accept': 'application/json', 'Authorization': f"Bearer "
                                                               f"{access_token}"}
     query_string = {'filter.zipCode.near': f"{zipcode}", 'filter.chain':
-        f"{chain.upper()}", 'filter.limit': '2'}
+        f"{chain.upper()}", 'filter.limit': '1'}
     response = requests.get(url, headers=headers, params=query_string)
     stores = response.json()
 
@@ -54,18 +54,16 @@ def check_product_availability(product=None, location_id=None):
     for product in products:
         item = {'Name': product['description']}
         inventory_details = product['items'][0]
-        try:
-            # print(inventory_details['inventory']['stockLevel'])
+        if 'inventory' in inventory_details:
             if inventory_details['inventory']['stockLevel'] != \
                     'TEMPORARILY_OUT_OF_STOCK':
                 item['productId'] = product['productId']
                 return True, item
-            elif any([value for key, value in inventory_details['fulfillment'].items()]):
-                item['fulfillment_options'] = [key for key, value in
-                                               inventory_details['fulfillment'].items() if value]
-                item['productId'] = product['productId']
-                return True, item
-        except KeyError:
-            return response_json, False, {}
+        elif any([value for key, value in inventory_details[
+            'fulfillment'].items()]):
+            item['fulfillment_options'] = [key for key, value in
+                                           inventory_details['fulfillment'].items() if value]
+            item['productId'] = product['productId']
+            return True, item
 
-    return response_json, False, {}
+    return False, {}, response_json
