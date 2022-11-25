@@ -8,6 +8,7 @@ fastapi = "*"
 requests = "*"
 hypercorn = "*"
 jinja2 = "*"
+python-multipart = "*"
 
 [dev-packages]
 

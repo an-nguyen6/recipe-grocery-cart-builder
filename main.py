@@ -1,10 +1,17 @@
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import RedirectResponse, HTMLResponse
 from pydantic import BaseModel
 from APIs import FoodData, KrogerCustomer, Kroger
 from datetime import datetime
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+app.mount('/static', StaticFiles(directory='static'), name='static')
+
+templates = Jinja2Templates(directory='templates')
+
 
 class GroceryItem(BaseModel):
     item: str
@@ -12,19 +19,34 @@ class GroceryItem(BaseModel):
 
 db = {}
 
-@app.get('/')
-def hello():
-    return {'hello': 'world'}
+@app.get('/', response_class=HTMLResponse)
+def welcome(request: Request):
+    return templates.TemplateResponse('welcome.html', context={'request':
+                                                                  request,
+                                                    'message': 'Welcome'})
+
+@app.get('/macros', response_class=HTMLResponse)
+def get_macro_form(request: Request):
+    result = "Enter macros"
+    return templates.TemplateResponse("macros.html", {"request": request,
+                                                          "result": result})
+
+@app.post('/macros', response_class=HTMLResponse)
+def post_macro_form(request: Request, carbs: int = Form(), protein :
+                            int = Form(), fat : int = Form()):
+    result = FoodData.food_from_macros(carbs, protein, fat)
+    return templates.TemplateResponse("macros.html", {"request": request,
+                                                          "result": result})
 
 @app.get('/food/{food_search}')
 def get_food(food_search: str):
     food_result = FoodData.get_food(food_search)
     return food_result
 
-@app.get('/food-from-macros/{carb}&{protein}&{fat}')
-def food_from_macros(carb: int, protein: int, fat: int):
-    food_results = FoodData.food_from_macros(carb, protein, fat)
-    return food_results
+# @app.get('/food-from-macros/{carb}&{protein}&{fat}')
+# def food_from_macros(carb: int, protein: int, fat: int):
+#     food_results = FoodData.food_from_macros(carb, protein, fat)
+#     return food_results
 
 @app.get('/Kroger', response_class=RedirectResponse)
 def kroger_sign_in():
