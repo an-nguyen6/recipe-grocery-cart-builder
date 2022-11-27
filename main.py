@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from pydantic import BaseModel
-from APIs import FoodData, KrogerCustomer, Kroger
+from APIs import FoodData, KrogerCustomer, Kroger, Spoonacular
 from datetime import datetime
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from typing import Optional
 
 app = FastAPI()
 
@@ -67,6 +68,55 @@ def post_food(request: Request, food: str = Form()):
 def get_food_macros(request: Request, food):
     result = FoodData.get_food(food)
     return templates.TemplateResponse("foodSearch.html", {"request": request,
+                                                      "result": result})
+
+
+@app.get('/recipe-search', response_class=HTMLResponse)
+def get_recipe(request: Request):
+    result = "Search for a recipe"
+    return templates.TemplateResponse("recipeSearch.html", {"request": request,
+                                                      "result": result})
+
+@app.post('/recipe-search', response_class=HTMLResponse)
+def post_recipe(request: Request, ingredient1 : str = Form(None), ingredient2: str
+                        = Form(None), ingredient3 : str = Form(None), carbs :
+                        int = Form(None), protein : int = Form(None), fat : int = Form(None)):
+    if any([ingredient1, ingredient2, ingredient3]):
+        url = f"{app.url_path_for('get_recipes_ingredients')}?ingredient1=" \
+              f"{ingredient1}&ingredient2={ingredient2}&ingredient3={ingredient3}"
+        response = RedirectResponse(url=url)
+        response.status_code = 301
+        return response
+    else:
+        if carbs is None or protein is None or fat is None:
+            result = "Please enter all macros"
+            return templates.TemplateResponse("recipeSearch.html",
+                                              {"request": request,
+                                               "result": result})
+        else:
+            url = f"{app.url_path_for('get_recipes_macros')}?carbs=" \
+                  f"{carbs}&protein={protein}&fat={fat}"
+            response = RedirectResponse(url=url)
+            response.status_code = 301
+            return response
+
+
+@app.get('/recipes-from-ingredients', response_class=HTMLResponse)
+def get_recipes_ingredients(request: Request, ingredient1, ingredient2,
+                        ingredient3):
+    to_search = []
+    for i in [ingredient1, ingredient2, ingredient3]:
+        if i != 'None':
+            to_search.append(i)
+
+    result = Spoonacular.get_recipe_from_ingredients(i)
+    return templates.TemplateResponse("recipeSearch.html", {"request": request,
+                                                      "result": result})
+
+@app.get('/recipes-from-macros', response_class=HTMLResponse)
+def get_recipes_macros(request: Request, carbs, protein, fat):
+    result = Spoonacular.get_recipes_from_macros(carbs, protein, fat)
+    return templates.TemplateResponse("recipeSearch.html", {"request": request,
                                                       "result": result})
 
 
