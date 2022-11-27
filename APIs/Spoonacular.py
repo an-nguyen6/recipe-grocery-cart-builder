@@ -18,13 +18,16 @@ def get_recipe_from_ingredients(ingredient_list: list):
 	response = requests.request("GET", url, headers=headers, params=querystring)
 	result = {}
 	response_json = response.json()
+	# print(response_json)
+	# return response_json
 	for recipe in response_json:
 		result[recipe['title']] = {}
 		result[recipe['title']]['image'] = recipe['image']
-		result[recipe['title']]['missingIngredients']['amount'] = \
-			f"{recipe['missedIngredients']['amount']} {recipe['missedIngredients']['unit']}"
-		result[recipe['title']]['missingIngredients']['name'] = \
-			f"{recipe['missedIngredients']['name']}"
+		result[recipe['title']]['missingIngredients'] = []
+		for item in recipe['missedIngredients']:
+			result[recipe['title']]['missingIngredients'].append({'name' :  item['name'],
+			'amount' : item['amount'],
+			'unit' : item['unit']})
 	return result
 
 # search recipes by macros (return up to 5)
