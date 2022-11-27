@@ -29,7 +29,7 @@ def get_Kroger_location(zipcode=None, chain=None):
     if len(stores['data']) == 0:
         return "Try a different zipcode and/or chain"
 
-    result = stores['data']
+    result = stores['data'][0]
     return result
 
 
