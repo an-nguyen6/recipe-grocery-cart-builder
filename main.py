@@ -5,20 +5,16 @@ from APIs import FoodData, KrogerCustomer, Kroger, Spoonacular
 from datetime import datetime
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from typing import Optional
+from database import DataBase
 
 app = FastAPI()
+app.db = DataBase()
+app.db.put('refreshed', 0)
 
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
 templates = Jinja2Templates(directory='templates')
 
-
-class GroceryItem(BaseModel):
-    item: str
-    quantity: int
-
-db = {}
 
 @app.get('/', response_class=HTMLResponse)
 def welcome(request: Request):
@@ -128,9 +124,12 @@ def kroger_sign_in():
 @app.get('/Kroger/access-code/', response_class=RedirectResponse)
 def get_kroger_token(code: str):
     token_dict = KrogerCustomer.get_token(code)
-    db['kroger_access_token'] = token_dict['access_token']
-    db['kroger_refresh_token'] = token_dict['refresh_token']
-    db['kroger_access_token_start'] = token_dict['start_time']
+    app.db.put('kroger_access_token', token_dict['access_token'])
+    app.db.put('kroger_refresh_token', token_dict['refresh_token'])
+    app.db.put('kroger_access_token_start', token_dict['start_time'])
+    # db['kroger_access_token'] = token_dict['access_token']
+    # db['kroger_refresh_token'] = token_dict['refresh_token']
+    # db['kroger_access_token_start'] = token_dict['start_time']
     # url = app.url_path_for('kroger_login_successful')
     url = app.url_path_for('get_add_to_cart')
     response = RedirectResponse(url=url)
@@ -138,10 +137,14 @@ def get_kroger_token(code: str):
 
 @app.get('/Kroger/refresh-customer-token/', response_class=RedirectResponse)
 def refresh_kroger_token():
-    new_token_dict = KrogerCustomer.refresh_token(db['kroger_refresh_token'])
-    db['kroger_access_token'] = new_token_dict['access_token']
-    db['kroger_refresh_token'] = new_token_dict['refresh_token']
-    db['kroger_access_token_start'] = new_token_dict['start_time']
+    new_token_dict = KrogerCustomer.refresh_token(app.db.get(
+                                                      'kroger_refresh_token'))
+    app.db.put('kroger_access_token', new_token_dict['access_token'])
+    app.db.put('kroger_refresh_token', new_token_dict['refresh_token'])
+    app.db.put('kroger_access_token_start', new_token_dict['start_time'])
+    # db['kroger_access_token'] = new_token_dict['access_token']
+    # db['kroger_refresh_token'] = new_token_dict['refresh_token']
+    # db['kroger_access_token_start'] = new_token_dict['start_time']
     # redirect to add to cart call since this is the only case in which we'd
     # need to refresh the customer access token to reduce number of Kroger
     # signins
@@ -158,7 +161,8 @@ def kroger_login_successful():
 # for testing purposes only
 @app.get('/Kroger/all-codes')
 def get_kroger_tokens():
-    return db
+    return app.db.all()
+    # return db
 
 
 @app.get('/Kroger/set-preferred-location/', response_class=HTMLResponse)
@@ -179,14 +183,17 @@ def post_location(request: Request, zipcode : str = Form(), chain : str =
 @app.get('/Kroger/set-preferred-location-result', response_class=HTMLResponse)
 def set_preferred_location(request: Request, zipcode, chain):
     preferred_location = Kroger.get_Kroger_location(zipcode, chain)
-    db['preferred_location_id'] = preferred_location['locationId']
-    db['preferred_location_chain'] = preferred_location['chain']
-    db['preferred_location_address'] = preferred_location['address']
-    result = f"Added preferred {db['preferred_location_chain']} at " \
-             f"{db['preferred_location_address']['addressLine1']} " \
-             f"{db['preferred_location_address']['city']} " \
-             f"{db['preferred_location_address']['state']} " \
-             f"{db['preferred_location_address']['zipCode']} "
+    app.db.put('preferred_location_id', preferred_location['locationId'])
+    app.db.put('preferred_location_chain', preferred_location['chain'])
+    app.db.put('preferred_location_address', preferred_location['address'])
+    # db['preferred_location_id'] = preferred_location['locationId']
+    # db['preferred_location_chain'] = preferred_location['chain']
+    # db['preferred_location_address'] = preferred_location['address']
+    result = f"Added preferred {app.db.get('preferred_location_chain')} at " \
+             f"{app.db.get('preferred_location_address')['addressLine1']} " \
+             f"{app.db.get('preferred_location_address')['city']} " \
+             f"{app.db.get('preferred_location_address')['state']} " \
+             f"{app.db.get('preferred_location_address')['zipCode']} "
     return templates.TemplateResponse('setLocation.html', {"request": request,
                                                          "result": result})
 
@@ -213,7 +220,7 @@ def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
     # if no preferred location, get location using zipcode and chain and save
     # check product availability at preferred location id
     # if available, then add to cart
-    if 'kroger_access_token' not in db:
+    if 'kroger_access_token' not in app.db.all():
         result = 'please sign in to Kroger first'
         url = app.url_path_for('kroger_sign_in')
         response = RedirectResponse(url=url)
@@ -221,13 +228,15 @@ def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
         return response
 
     # check if token is expired. if so, make refresh token call
-    time_diff = datetime.now() - db['kroger_access_token_start']
+    time_diff = datetime.now() - app.db.get('kroger_access_token_start')
     if time_diff.total_seconds() >= 1740:
         refresh_kroger_token()
-        db['refreshed'] += 1
+        updated_refresh = app.db.get('refreshed') + 1
+        app.db.put('refreshed', updated_refresh)
+        # db['refreshed'] += 1
 
-    if 'preferred_location_id' in db:
-        location_id = db['preferred_location_id']
+    if 'preferred_location_id' in app.db.all():
+        location_id = app.db.get('preferred_location_id')
     elif zipcode is None or chain is None:
         result =  "no preferred location please add"
         url = app.url_path_for('get_location')
@@ -243,7 +252,7 @@ def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
 
     if availability_details[0]:
         product_id = availability_details[1]['productId']
-        kroger_response = KrogerCustomer.add_to_cart(db['kroger_access_token'],
+        kroger_response = KrogerCustomer.add_to_cart(app.db.get('kroger_access_token'),
                                        product_id, quantity)
 
         if 200 < kroger_response.status_code < 300:
