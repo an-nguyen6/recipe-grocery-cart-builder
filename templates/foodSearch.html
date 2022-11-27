@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>Food Search</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Look up macros for a food item</h1>
+        <form method="POST">
+            <label for="food">Food:</label><br>
+            <input type="string" name="food"><br>
+            <input type="submit" value="Submit">
+        </form>
+        <h2> Response: {{ result }}</h2>
+    </body>
+</html>

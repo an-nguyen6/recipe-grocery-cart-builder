@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <title>Recipe Search</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <p>
+            <select id="sel" onchange="toggle()">
+                <option value="None" selected>None</option>
+                <option value="ingredients">ingredients</option>
+                <option value="macros">macros</option>
+            </select>
+        </p>
+        <div id="ingredients" style="display:none;">
+            <h1>Look up recipe from ingredients</h1>
+            <form method="POST">
+                <label for="ingredient1">ingredient1:</label><br>
+                <input type="string" name="ingredient1"><br>
+                <label for="ingredient2">ingredient2:</label><br>
+                <input type="string" name="ingredient2"><br>
+                <label for="ingredient3">ingredient3:</label><br>
+                <input type="string" name="ingredient3"><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <div id="macros" style="display:none;">
+            <h1>Look up recipe from macros</h1>
+            <form method="POST">
+                <label for="carbs">Carbs:</label><br>
+                <input type="string" name="carbs"><br>
+                <label for="protein">Protein:</label><br>
+                <input type="string" name="protein"><br>
+                <label for="fat">Fat:</label><br>
+                <input type="string" name="fat"><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <h2> Response: {{ result }}</h2>
+    </body>
+    <script>
+<!-- Source: www.w3schools.com/howto/howto_js_toggle_hide_show.asp  -->
+        function toggle() {
+            var ingredients = document.getElementById('ingredients')
+            ingredients.style.display = 'None'
+            var macros = document.getElementById('macros')
+            macros.style.display = 'None'
+            var dd = document.getElementById('sel')
+            var mode = dd.value
+            var ing = document.getElementById(mode);
+            if (ing.style.display == 'none') {
+                ing.style.display = 'block';
+            }
+            else {
+                ing.style.display = 'none';
+            }
+        }
+    </script>
+</html>
