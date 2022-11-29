@@ -16,15 +16,14 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 templates = Jinja2Templates(directory='templates')
 
 
+
 @app.get('/', response_class=HTMLResponse)
 def welcome(request: Request):
-    return templates.TemplateResponse('welcome.html', context={'request':
-                                                                  request,
-                                                    'message': 'Welcome'})
+    return templates.TemplateResponse('welcome.html', context={'request':request,
+                                        'message': 'Welcome'})
 
 @app.get('/macros', response_class=HTMLResponse)
-def get_macro_form(request: Request):
-    result = "Enter macros"
+def get_macro_form(request: Request, result = "Enter macros"):
     return templates.TemplateResponse("macros.html", {"request": request,
                                                           "result": result})
 
@@ -42,13 +41,13 @@ def post_macro_form(request: Request, carbs: int = Form(), protein :
 @app.get('/macros-results', response_class=HTMLResponse)
 def get_macro_recs(request: Request, carbs, protein, fat):
     result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))
-    return templates.TemplateResponse("macroResults.html", {"request": request,
-                                                          "result": result})
+    url = f"{app.url_path_for('get_macro_form')}?result={result}"
+    response = RedirectResponse(url=url)
+    return response
 
 
 @app.get('/food-search', response_class=HTMLResponse)
-def get_food(request: Request):
-    result = "Enter a food item"
+def get_food(request: Request, result = "Enter a food item"):
     return templates.TemplateResponse("foodSearch.html", {"request": request,
                                                       "result": result})
 
@@ -63,13 +62,15 @@ def post_food(request: Request, food: str = Form()):
 @app.get('/food-search-results', response_class=HTMLResponse)
 def get_food_macros(request: Request, food):
     result = FoodData.get_food(food)
-    return templates.TemplateResponse("foodSearch.html", {"request": request,
-                                                      "result": result})
+    url = f"{app.url_path_for('get_food')}?result={result}"
+    response = RedirectResponse(url=url)
+    response.status_code = 301
+    return response
+
 
 
 @app.get('/recipe-search', response_class=HTMLResponse)
-def get_recipe(request: Request):
-    result = "Search for a recipe"
+def get_recipe(request: Request, result="Search for a recipe"):
     return templates.TemplateResponse("recipeSearch.html", {"request": request,
                                                       "result": result})
 
@@ -105,15 +106,20 @@ def get_recipes_ingredients(request: Request, ingredient1, ingredient2,
         if i != 'None':
             to_search.append(i)
 
-    result = Spoonacular.get_recipe_from_ingredients(i)
-    return templates.TemplateResponse("recipeSearch.html", {"request": request,
-                                                      "result": result})
+    result = Spoonacular.get_recipe_from_ingredients(to_search)
+    url = f"{app.url_path_for('get_recipe')}?result={result}"
+    response = RedirectResponse(url=url)
+    response.status_code = 301
+    return response
+
 
 @app.get('/recipes-from-macros', response_class=HTMLResponse)
 def get_recipes_macros(request: Request, carbs, protein, fat):
     result = Spoonacular.get_recipes_from_macros(carbs, protein, fat)
-    return templates.TemplateResponse("recipeSearch.html", {"request": request,
-                                                      "result": result})
+    url = f"{app.url_path_for('get_recipe')}?result={result}"
+    response = RedirectResponse(url=url)
+    response.status_code = 301
+    return response
 
 
 @app.get('/Kroger', response_class=RedirectResponse)
@@ -166,8 +172,7 @@ def get_kroger_tokens():
 
 
 @app.get('/Kroger/set-preferred-location/', response_class=HTMLResponse)
-def get_location(request: Request):
-    result = "Enter zipcode and chain"
+def get_location(request: Request, result="Enter zipcode and chain"):
     return templates.TemplateResponse('SetLocation.html', {"request": request,
                                                          "result": result})
 
@@ -194,14 +199,14 @@ def set_preferred_location(request: Request, zipcode, chain):
              f"{app.db.get('preferred_location_address')['city']} " \
              f"{app.db.get('preferred_location_address')['state']} " \
              f"{app.db.get('preferred_location_address')['zipCode']} "
-    return templates.TemplateResponse('setLocation.html', {"request": request,
-                                                         "result": result})
+    url = f"{app.url_path_for('get_location')}?result={result}"
+    response = RedirectResponse(url=url)
+    return response
 
 
 
 @app.get('/Kroger/add-to-cart/', response_class=HTMLResponse)
-def get_add_to_cart(request: Request):
-    result = "Enter item and quantity"
+def get_add_to_cart(request: Request, result="Enter item and quantity"):
     return templates.TemplateResponse('addToCart.html', {"request": request,
                                                       "result": result})
 
@@ -259,6 +264,6 @@ def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
             result = f"{item} added"
         else:
             result = "error adding to cart"
-
-        return templates.TemplateResponse('addToCart.html', {"request": request,
-                                                         "result": result})
+        url = f"{app.url_path_for('get_add_to_cart')}?result={result}"
+        response = RedirectResponse(url=url)
+        return response
