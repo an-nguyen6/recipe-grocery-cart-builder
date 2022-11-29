@@ -25,7 +25,8 @@ def welcome(request: Request):
 
 @app.get('/macros', response_class=HTMLResponse)
 def get_macro_form(request: Request, message="Enter macros", result={"None":
-                                                                     "yet"}):
+                                                                         {
+                                                                             "results":0}}):
     if 'macro_results' in app.db.all():
         result = app.db.get('macro_results')
 
@@ -35,23 +36,13 @@ def get_macro_form(request: Request, message="Enter macros", result={"None":
                                                           result})
 
 
-@app.post('/macros', response_class=RedirectResponse)
+@app.post('/macros-results', response_class=RedirectResponse)
 def post_macro_form(request: Request, carbs: int = Form(), protein :
                             int = Form(), fat : int = Form()):
-    url = f"{app.url_path_for('get_macro_recs')}?carbs={carbs}&pr" \
-          f"otein={protein}&fat={fat}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
-
-
-@app.get('/macros-results', response_class=HTMLResponse)
-def get_macro_recs(request: Request, carbs, protein, fat):
     result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))[1]
-    url = f"{app.url_path_for('get_macro_form')}"
-    app.db.put('macro_results', result)
-    response = RedirectResponse(url=url)
-    return response
+    return templates.TemplateResponse("macros.html", {"request": request,
+                                                      "result":
+                                                          result})
 
 
 
@@ -60,22 +51,11 @@ def get_food(request: Request, result = "Enter a food item"):
     return templates.TemplateResponse("foodSearch.html", {"request": request,
                                                       "result": result})
 
-@app.post('/food-search', response_class=RedirectResponse)
+@app.post('/food-search-results', response_class=RedirectResponse)
 def post_food(request: Request, food: str = Form()):
-    url = f"{app.url_path_for('get_food_macros')}?food={food}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
-
-
-@app.get('/food-search-results', response_class=HTMLResponse)
-def get_food_macros(request: Request, food):
     result = FoodData.get_food(food)
-    url = f"{app.url_path_for('get_food')}?result={result}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
-
+    return templates.TemplateResponse("foodSearch.html", {"request": request,
+                                                          "result": result})
 
 
 @app.get('/recipe-search', response_class=HTMLResponse)
@@ -83,52 +63,34 @@ def get_recipe(request: Request, result="Search for a recipe"):
     return templates.TemplateResponse("recipeSearch.html", {"request": request,
                                                       "result": result})
 
-@app.post('/recipe-search', response_class=HTMLResponse)
+@app.post('/recipe-search-ingredients', response_class=HTMLResponse)
 def post_recipe(request: Request, ingredient1 : str = Form(None), ingredient2: str
-                        = Form(None), ingredient3 : str = Form(None), carbs :
-                        int = Form(None), protein : int = Form(None), fat : int = Form(None)):
-    if any([ingredient1, ingredient2, ingredient3]):
-        url = f"{app.url_path_for('get_recipes_ingredients')}?ingredient1=" \
-              f"{ingredient1}&ingredient2={ingredient2}&ingredient3={ingredient3}"
-        response = RedirectResponse(url=url)
-        response.status_code = 301
-        return response
-    else:
-        if carbs is None or protein is None or fat is None:
-            result = "Please enter all macros"
-            return templates.TemplateResponse("recipeSearch.html",
-                                              {"request": request,
-                                               "result": result})
-        else:
-            url = f"{app.url_path_for('get_recipes_macros')}?carbs=" \
-                  f"{carbs}&protein={protein}&fat={fat}"
-            response = RedirectResponse(url=url)
-            response.status_code = 301
-            return response
-
-
-@app.get('/recipes-from-ingredients', response_class=HTMLResponse)
-def get_recipes_ingredients(request: Request, ingredient1, ingredient2,
-                        ingredient3):
+                        = Form(None), ingredient3 : str = Form(None)):
     to_search = []
     for i in [ingredient1, ingredient2, ingredient3]:
         if i != 'None':
             to_search.append(i)
 
     result = Spoonacular.get_recipe_from_ingredients(to_search)
-    url = f"{app.url_path_for('get_recipe')}?result={result}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
+    return templates.TemplateResponse("recipeSearch.html", {"request": request,
+                                                            "result": result})
 
 
-@app.get('/recipes-from-macros', response_class=HTMLResponse)
-def get_recipes_macros(request: Request, carbs, protein, fat):
-    result = Spoonacular.get_recipes_from_macros(carbs, protein, fat)
-    url = f"{app.url_path_for('get_recipe')}?result={result}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
+
+@app.post('/recipe-search-macros', response_class=HTMLResponse)
+def post_recipe(request: Request, carbs :
+                        int = Form(None), protein : int = Form(None), fat : int = Form(None)):
+
+    if carbs is None or protein is None or fat is None:
+        result = "Please enter all macros"
+        return templates.TemplateResponse("recipeSearch.html",
+                                          {"request": request,
+                                           "result": result})
+    else:
+        result = Spoonacular.get_recipes_from_macros(carbs, protein, fat)
+        return templates.TemplateResponse("recipeSearch.html",
+                                          {"request": request,
+                                           "result": result})
 
 
 @app.get('/Kroger', response_class=RedirectResponse)
@@ -142,10 +104,6 @@ def get_kroger_token(code: str):
     app.db.put('kroger_access_token', token_dict['access_token'])
     app.db.put('kroger_refresh_token', token_dict['refresh_token'])
     app.db.put('kroger_access_token_start', token_dict['start_time'])
-    # db['kroger_access_token'] = token_dict['access_token']
-    # db['kroger_refresh_token'] = token_dict['refresh_token']
-    # db['kroger_access_token_start'] = token_dict['start_time']
-    # url = app.url_path_for('kroger_login_successful')
     url = app.url_path_for('get_add_to_cart')
     response = RedirectResponse(url=url)
     return response
@@ -157,9 +115,6 @@ def refresh_kroger_token():
     app.db.put('kroger_access_token', new_token_dict['access_token'])
     app.db.put('kroger_refresh_token', new_token_dict['refresh_token'])
     app.db.put('kroger_access_token_start', new_token_dict['start_time'])
-    # db['kroger_access_token'] = new_token_dict['access_token']
-    # db['kroger_refresh_token'] = new_token_dict['refresh_token']
-    # db['kroger_access_token_start'] = new_token_dict['start_time']
     # redirect to add to cart call since this is the only case in which we'd
     # need to refresh the customer access token to reduce number of Kroger
     # signins
@@ -185,33 +140,21 @@ def get_location(request: Request, result="Enter zipcode and chain"):
     return templates.TemplateResponse('SetLocation.html', {"request": request,
                                                          "result": result})
 
-@app.post('/Kroger/set-preferred-location/', response_class=RedirectResponse)
+@app.post('/Kroger/set-preferred-location-result',
+          response_class=RedirectResponse)
 def post_location(request: Request, zipcode : str = Form(), chain : str =
                         Form()):
-    url = f"{app.url_path_for('set_preferred_location')}?zipcode=" \
-          f"{zipcode}&chain={chain}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
-
-@app.get('/Kroger/set-preferred-location-result', response_class=HTMLResponse)
-def set_preferred_location(request: Request, zipcode, chain):
     preferred_location = Kroger.get_Kroger_location(zipcode, chain)
     app.db.put('preferred_location_id', preferred_location['locationId'])
     app.db.put('preferred_location_chain', preferred_location['chain'])
     app.db.put('preferred_location_address', preferred_location['address'])
-    # db['preferred_location_id'] = preferred_location['locationId']
-    # db['preferred_location_chain'] = preferred_location['chain']
-    # db['preferred_location_address'] = preferred_location['address']
     result = f"Added preferred {app.db.get('preferred_location_chain')} at " \
              f"{app.db.get('preferred_location_address')['addressLine1']} " \
              f"{app.db.get('preferred_location_address')['city']} " \
              f"{app.db.get('preferred_location_address')['state']} " \
              f"{app.db.get('preferred_location_address')['zipCode']} "
-    url = f"{app.url_path_for('get_location')}?result={result}"
-    response = RedirectResponse(url=url)
-    return response
-
+    return templates.TemplateResponse('SetLocation.html', {"request": request,
+                                                           "result": result})
 
 
 @app.get('/Kroger/add-to-cart/', response_class=HTMLResponse)
@@ -219,23 +162,13 @@ def get_add_to_cart(request: Request, result="Enter item and quantity"):
     return templates.TemplateResponse('addToCart.html', {"request": request,
                                                       "result": result})
 
-@app.post('/Kroger/add-to-cart/', response_class=RedirectResponse)
+@app.post('/Kroger/add-to-cart-result', response_class=RedirectResponse)
 def post_add_to_cart(request: Request, item : str = Form(), quantity : int =
                         Form()):
-    url = f"{app.url_path_for('add_to_cart')}?item={item}&quantity={quantity}"
-    response = RedirectResponse(url=url)
-    response.status_code = 301
-    return response
-
-
-@app.get('/Kroger/add-to-cart-result', response_class=HTMLResponse)
-def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
-                                                                    chain: str=None):
     # if no preferred location, get location using zipcode and chain and save
     # check product availability at preferred location id
     # if available, then add to cart
     if 'kroger_access_token' not in app.db.all():
-        result = 'please sign in to Kroger first'
         url = app.url_path_for('kroger_sign_in')
         response = RedirectResponse(url=url)
         response.status_code = 301
@@ -247,32 +180,28 @@ def add_to_cart(request: Request, item: str, quantity: int, zipcode: str=None, \
         refresh_kroger_token()
         updated_refresh = app.db.get('refreshed') + 1
         app.db.put('refreshed', updated_refresh)
-        # db['refreshed'] += 1
 
     if 'preferred_location_id' in app.db.all():
         location_id = app.db.get('preferred_location_id')
-    elif zipcode is None or chain is None:
-        result =  "no preferred location please add"
+    else:
         url = app.url_path_for('get_location')
         response = RedirectResponse(url=url)
         response.status_code = 301
         return response
-        # return templates.TemplateResponse('addToCart.html', {"request": request,
-        #                                                      "result": result})
-    # else:
-    #     location_id = set_preferred_location(zipcode, chain)
 
     availability_details = Kroger.check_product_availability(item, location_id)
 
     if availability_details[0]:
         product_id = availability_details[1]['productId']
-        kroger_response = KrogerCustomer.add_to_cart(app.db.get('kroger_access_token'),
-                                       product_id, quantity)
+        kroger_response = KrogerCustomer.add_to_cart(
+            app.db.get('kroger_access_token'),
+            product_id, quantity)
 
         if 200 < kroger_response.status_code < 300:
             result = f"{item} added"
         else:
             result = "error adding to cart"
-        url = f"{app.url_path_for('get_add_to_cart')}?result={result}"
-        response = RedirectResponse(url=url)
-        return response
+
+        return templates.TemplateResponse('addToCart.html', {"request": request,
+                                                             "result": result})
+
