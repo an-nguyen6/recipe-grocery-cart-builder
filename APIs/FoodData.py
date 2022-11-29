@@ -23,7 +23,7 @@ def get_food(search_term):
     base_url = 'https://api.nal.usda.gov/fdc/v1/foods/search'
     url = f"{base_url}?api_key={api_key}&query=" \
           f"{search_term}&dataType=Foundation&pageSize=1"
-    print(f"searching for {search_term}")
+    # print(f"searching for {search_term}")
     response = requests.get(url)
     response_json = response.json()
     result = {}
