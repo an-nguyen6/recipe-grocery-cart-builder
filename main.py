@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from database import DataBase
 
+
 app = FastAPI()
 app.db = DataBase()
 app.db.put('refreshed', 0)
@@ -23,9 +24,15 @@ def welcome(request: Request):
                                         'message': 'Welcome'})
 
 @app.get('/macros', response_class=HTMLResponse)
-def get_macro_form(request: Request, result = "Enter macros"):
+def get_macro_form(request: Request, message="Enter macros", result={"None":
+                                                                     "yet"}):
+    if 'macro_results' in app.db.all():
+        result = app.db.get('macro_results')
+
     return templates.TemplateResponse("macros.html", {"request": request,
-                                                          "result": result})
+                                                      "message": message,
+                                                          "result":
+                                                          result})
 
 
 @app.post('/macros', response_class=RedirectResponse)
@@ -40,10 +47,12 @@ def post_macro_form(request: Request, carbs: int = Form(), protein :
 
 @app.get('/macros-results', response_class=HTMLResponse)
 def get_macro_recs(request: Request, carbs, protein, fat):
-    result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))
-    url = f"{app.url_path_for('get_macro_form')}?result={result}"
+    result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))[1]
+    url = f"{app.url_path_for('get_macro_form')}"
+    app.db.put('macro_results', result)
     response = RedirectResponse(url=url)
     return response
+
 
 
 @app.get('/food-search', response_class=HTMLResponse)
