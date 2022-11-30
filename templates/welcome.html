@@ -5,5 +5,13 @@
 </head>
 <body>
     <h1>{{ message }}</h1>
+    <a href="/macros">Enter daily macros</a>
+    <a href="/food-search">Search food</a>
+    <a href="/recipe-search">Search recipes</a>
+    <a href="/Kroger/set-preferred-location">Set preferred store</a>
+    <a href="/Kroger/add-to-cart">Add to Kroger cart</a>
+
+    <div id="content"> {% block content %}{% endblock %}</div>
+
 </body>
 </html>
