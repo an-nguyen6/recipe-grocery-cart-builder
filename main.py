@@ -47,9 +47,9 @@ def post_macro_form(request: Request, carbs: int = Form(), protein :
 
 
 @app.get('/food-search', response_class=HTMLResponse)
-def get_food(request: Request, result = "Enter a food item"):
+def get_food(request: Request, message="Enter food", result={"None":"yet"}):
     return templates.TemplateResponse("foodSearch.html", {"request": request,
-                                                      "result": result})
+                                                      "message": message, "result": result})
 
 @app.post('/food-search-results', response_class=RedirectResponse)
 def post_food(request: Request, food: str = Form()):
@@ -59,8 +59,10 @@ def post_food(request: Request, food: str = Form()):
 
 
 @app.get('/recipe-search', response_class=HTMLResponse)
-def get_recipe(request: Request, result="Search for a recipe"):
+def get_recipe(request: Request, message="Search for a recipe", result={
+                        "None":"None"}):
     return templates.TemplateResponse("recipeSearch.html", {"request": request,
+                                                            "message": message,
                                                       "result": result})
 
 @app.post('/recipe-search-ingredients', response_class=HTMLResponse)

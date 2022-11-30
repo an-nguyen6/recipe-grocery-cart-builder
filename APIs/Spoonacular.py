@@ -22,13 +22,13 @@ def get_recipe_from_ingredients(ingredient_list: list):
 	# return response_json
 	for recipe in response_json:
 		result[recipe['title']] = {}
-		result[recipe['title']]['image'] = recipe['image']
+		# result[recipe['title']]['image'] = recipe['image']
 		result[recipe['title']]['missingIngredients'] = []
 		for item in recipe['missedIngredients']:
-			result[recipe['title']]['missingIngredients'].append({'name' :  item['name'],
-			'amount' : item['amount'],
-			'unit' : item['unit']})
+			result[recipe['title']]['missingIngredients'].append(f""\
+											f"{item['amount']} {item['unit']} {item['name']}")
 	return result
+
 
 # search recipes by macros (return up to 5)
 def get_recipes_from_macros(carbs=0, protein=0, fat=0):
@@ -48,12 +48,12 @@ def get_recipes_from_macros(carbs=0, protein=0, fat=0):
 
 	for recipe in response_json:
 		result[recipe['title']] = {}
-		result[recipe['title']]['image'] = recipe['image']
+		# result[recipe['title']]['image'] = recipe['image']
 		result[recipe['title']]['calories'] = recipe['calories']
 		result[recipe['title']]['protein'] = recipe['protein']
 		result[recipe['title']]['fat'] = recipe['fat']
 		result[recipe['title']]['carbs'] = recipe['carbs']
-		result[recipe['title']]['sp_di'] = recipe['id']
+		# result[recipe['title']]['sp_di'] = recipe['id']
 		search_type_search_recipe = f"{recipe['id']}/information"
 		url_search_recipe = f"{base_url}/{search_type_search_recipe}"
 		response_search_recipe = requests.request("GET", url_search_recipe,
@@ -62,10 +62,7 @@ def get_recipes_from_macros(carbs=0, protein=0, fat=0):
 		result[recipe['title']]['source'] = recipe_details['sourceUrl']
 		ingredients = []
 		for ingredient in recipe_details['extendedIngredients']:
-			parsed_ingredient = {}
-			parsed_ingredient['name'] = ingredient['name']
-			parsed_ingredient['original_name'] = ingredient['original']
-			ingredients.append(parsed_ingredient)
+			ingredients.append(ingredient['original'])
 		result[recipe['title']]['ingredients'] = ingredients
 
 	return result
