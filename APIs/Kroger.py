@@ -50,20 +50,22 @@ def check_product_availability(product=None, location_id=None):
     response = requests.get(url, headers=headers, params=query_string)
     response_json = response.json()
 
-    products = response_json['data']
-    for product in products:
-        item = {'Name': product['description']}
-        inventory_details = product['items'][0]
-        if 'inventory' in inventory_details:
-            if inventory_details['inventory']['stockLevel'] != \
-                    'TEMPORARILY_OUT_OF_STOCK':
+    if 'data' in response_json:
+        products = response_json['data']
+
+        for product in products:
+            item = {'Name': product['description']}
+            inventory_details = product['items'][0]
+            if 'inventory' in inventory_details:
+                if inventory_details['inventory']['stockLevel'] != \
+                        'TEMPORARILY_OUT_OF_STOCK':
+                    item['productId'] = product['productId']
+                    return True, item
+            elif any([value for key, value in inventory_details[
+                'fulfillment'].items()]):
+                item['fulfillment_options'] = [key for key, value in
+                                               inventory_details['fulfillment'].items() if value]
                 item['productId'] = product['productId']
                 return True, item
-        elif any([value for key, value in inventory_details[
-            'fulfillment'].items()]):
-            item['fulfillment_options'] = [key for key, value in
-                                           inventory_details['fulfillment'].items() if value]
-            item['productId'] = product['productId']
-            return True, item
 
-    return False, {}, response_json
+    return False, {}
