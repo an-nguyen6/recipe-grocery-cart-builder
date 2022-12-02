@@ -60,7 +60,7 @@ def post_food(request: Request, food: str = Form()):
 
 @app.get('/recipe-search', response_class=HTMLResponse)
 def get_recipe(request: Request, message="Search for a recipe", result={
-                        "None":"None"}):
+    "None":{"results":0}}):
     return templates.TemplateResponse("recipeSearch.html", {"request": request,
                                                             "message": message,
                                                       "result": result})
@@ -206,4 +206,7 @@ def post_add_to_cart(request: Request, item : str = Form(), quantity : int =
 
         return templates.TemplateResponse('addToCart.html', {"request": request,
                                                              "result": result})
+    else:
+        return templates.TemplateResponse('addToCart.html', {"request": request,
+                                                             "result": f"{item} not found"})
 
