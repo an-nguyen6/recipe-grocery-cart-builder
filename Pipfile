@@ -11,6 +11,8 @@ jinja2 = "*"
 python-multipart = "*"
 
 [dev-packages]
+pytest = "*"
+httpx = "*"
 
 [requires]
 python_version = "3.10"
