@@ -18,15 +18,14 @@ def get_recipe_from_ingredients(ingredient_list: list):
 	response = requests.request("GET", url, headers=headers, params=querystring)
 	result = {}
 	response_json = response.json()
-	# print(response_json)
-	# return response_json
 	for recipe in response_json:
 		result[recipe['title']] = {}
-		# result[recipe['title']]['image'] = recipe['image']
-		result[recipe['title']]['missingIngredients'] = []
+		result[recipe['title']]['Missing Ingredients'] = []
 		for item in recipe['missedIngredients']:
-			result[recipe['title']]['missingIngredients'].append(f""\
+			result[recipe['title']]['Missing Ingredients'].append(f""\
 											f"{item['amount']} {item['unit']} {item['name']}")
+	if len(result) == 0:
+		result = {"None": {"No result":"try something else"}}
 	return result
 
 
@@ -48,21 +47,19 @@ def get_recipes_from_macros(carbs=0, protein=0, fat=0):
 
 	for recipe in response_json:
 		result[recipe['title']] = {}
-		# result[recipe['title']]['image'] = recipe['image']
-		result[recipe['title']]['calories'] = recipe['calories']
-		result[recipe['title']]['protein'] = recipe['protein']
-		result[recipe['title']]['fat'] = recipe['fat']
-		result[recipe['title']]['carbs'] = recipe['carbs']
-		# result[recipe['title']]['sp_di'] = recipe['id']
+		result[recipe['title']]['Calories'] = recipe['calories']
+		result[recipe['title']]['Protein'] = recipe['protein']
+		result[recipe['title']]['Fat'] = recipe['fat']
+		result[recipe['title']]['Carbs'] = recipe['carbs']
 		search_type_search_recipe = f"{recipe['id']}/information"
 		url_search_recipe = f"{base_url}/{search_type_search_recipe}"
 		response_search_recipe = requests.request("GET", url_search_recipe,
 												  headers=headers)
 		recipe_details = response_search_recipe.json()
-		result[recipe['title']]['source'] = recipe_details['sourceUrl']
+		result[recipe['title']]['Source'] = recipe_details['sourceUrl']
 		ingredients = []
 		for ingredient in recipe_details['extendedIngredients']:
 			ingredients.append(ingredient['original'])
-		result[recipe['title']]['ingredients'] = ingredients
+		result[recipe['title']]['Ingredients'] = ingredients
 
 	return result

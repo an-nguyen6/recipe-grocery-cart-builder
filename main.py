@@ -87,8 +87,9 @@ def post_recipe(request: Request, ingredient1 : str = Form(None), ingredient2: s
 def post_recipe(request: Request, carbs :
                         int = Form(None), protein : int = Form(None), fat : int = Form(None)):
 
-    if carbs is None or protein is None or fat is None:
-        result = "Please enter all macros"
+    if carbs is None or protein is None or fat is None or carbs < 0 or \
+            protein < 0 or fat < 0:
+        result = {"None": {"Missing or invalid macros":'please re-enter'}}
         return templates.TemplateResponse("recipeSearch.html",
                                           {"request": request,
                                            "result": result})
