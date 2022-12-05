@@ -45,18 +45,21 @@ def get_food(search_term):
         if 'servingSize' in response_json['foods'][0]:
             has_serving_size = True
         if has_protein and has_fat and has_carb and has_serving_size:
-            result['food_name'] = response_json['foods'][0]['lowercaseDescription']
+            result['Food Name'] = response_json['foods'][0][
+                'lowercaseDescription']
             nutrients = response_json['foods'][0]['foodNutrients']
-            result['serving_size'] = f"{response_json['foods'][0]['servingSize']}" \
+            result['Serving Size'] = f"{response_json['foods'][0]['servingSize']}" \
                                      f" {response_json['foods'][0]['servingSizeUnit']}"
-            result['protein'] = [f"{nutrient['value']}" \
+            result['Protein'] = [f"{nutrient['value']}" \
                                  f" {nutrient['unitName'].lower()}" for
                                  nutrient in nutrients if 'protein' in
                                  nutrient['nutrientName'].lower()][0]
-            result['fat'] = [f"{nutrient['value']} {nutrient['unitName'].lower()}" for
+            result['Fat'] = [f"{nutrient['value']}" \
+                             f" {nutrient['unitName'].lower()}" for
                              nutrient in nutrients if 'fat' in nutrient[
                                  'nutrientName'].lower()][0]
-            result['carbs'] = [f"{nutrient['value']} {nutrient['unitName'].lower()}" for
+            result['Carbs'] = [f"{nutrient['value']}" \
+                               f" {nutrient['unitName'].lower()}" for
                                nutrient in nutrients if 'carb' in nutrient[
                                    'nutrientName'].lower()][0]
             return result
@@ -86,21 +89,21 @@ def get_food(search_term):
             if 'servingSize' in response_json['foods'][0]:
                 has_serving_size = True
             if has_protein and has_fat and has_carb and has_serving_size:
-                result['food_name'] = response_json['foods'][0][
+                result['Food Name'] = response_json['foods'][0][
                     'lowercaseDescription']
                 nutrients = response_json['foods'][0]['foodNutrients']
                 result[
-                    'serving_size'] = f"{response_json['foods'][0]['servingSize']}" \
+                    'Serving Size'] = f"{response_json['foods'][0]['servingSize']}" \
                                       f" {response_json['foods'][0]['servingSizeUnit']}"
-                result['protein'] = [f"{nutrient['value']}" \
+                result['Protein'] = [f"{nutrient['value']}" \
                                      f" {nutrient['unitName'].lower()}" for
                                      nutrient in nutrients if 'protein' in
                                      nutrient['nutrientName'].lower()][0]
-                result['fat'] = \
+                result['Fat'] = \
                 [f"{nutrient['value']} {nutrient['unitName'].lower()}" for
                  nutrient in nutrients if 'fat' in nutrient[
                      'nutrientName'].lower()][0]
-                result['carbs'] = \
+                result['Carbs'] = \
                 [f"{nutrient['value']} {nutrient['unitName'].lower()}" for
                  nutrient in nutrients if 'carb' in nutrient[
                      'nutrientName'].lower()][0]
