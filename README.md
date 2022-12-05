@@ -16,6 +16,7 @@ Chicagoland area) and add products to their cart.
 - Register for the FoodData API and get your API key
 - Register for the Spoonacular API and get your API key and host
 - Register for the Kroger API and get your client ID and secret
+- Add these to APIs/config.py
 
 ## Project proposals
 Project idea #1: Create an API to help people plan meals and buy groceries to meet their nutrition goals. 
