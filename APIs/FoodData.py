@@ -103,7 +103,7 @@ def get_food(search_term):
                      'nutrientName'].lower()][0]
                 return result
         if len(response_json['foods']) == 0:
-            return "try something else"
+            return {"No result": "try something else"}
     return result
 
 
