@@ -39,7 +39,11 @@ def get_macro_form(request: Request, message="Enter macros", result={"None":
 @app.post('/macros-results', response_class=RedirectResponse)
 def post_macro_form(request: Request, carbs: int = Form(), protein :
                             int = Form(), fat : int = Form()):
-    result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))[1]
+    if carbs + protein + fat <= 0:
+        result = {"None": {"Invalid or no macros entered":0}}
+    else:
+        result = FoodData.food_from_macros(int(carbs), int(protein), int(fat))[1]
+        app.db.put('macro_results', result)
     return templates.TemplateResponse("macros.html", {"request": request,
                                                       "result":
                                                           result})
