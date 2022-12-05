@@ -6,8 +6,11 @@ Chicagoland area) and add products to their cart.
 
 ## Getting Started
 - To fully use this app, register for a Kroger account
-- Ensure you have pipenv and hypercorn installed
-- Initiate the pipenv environment and run using hypercorn
+- Ensure you have pipenv installed `pip install pipenv`
+- Create pipenv environment `pipenv install`
+- Install hypercorn within your pipenv environment `pipenv install hypercorn`
+- Initiate the pipenv environment and run using hypercorn `pipenv shell` then 
+  `hypercorn main:app --reload`
 
 ## To implement
 - Register for the FoodData API and get your API key
