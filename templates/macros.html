@@ -1,0 +1,42 @@
+<html>
+{% extends "welcome.html" %}
+{% block content %}
+    <head>
+        <title>Basic Form</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Macro submission</h1>
+        <form action="/macros-results" method="POST">
+            <label for="carbs">Carbs:</label><br>
+            <input type="number" name="carbs"><br>
+            <label for="protein">Protein:</label><br>
+            <input type="number" name="protein"><br>
+            <label for="fat">Fat:</label><br>
+            <input type="number" name="fat"><br>
+            <input type="submit" value="Submit">
+        </form>
+        <h2> Prompt: {{ message }}</h2>
+      <table id="data" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Results</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in result.items() %}
+          {% if value|length > 0 %}
+
+            <tr>
+            {% for key, value in value.items() %}
+              <td>{{ key }}: {{ value }}</td>
+            {% endfor %}
+            </tr>
+
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </body>
+{% endblock %}
+</html>

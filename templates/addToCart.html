@@ -1,0 +1,20 @@
+<html>
+{% extends "welcome.html" %}
+{% block content %}
+    <head>
+        <title>Add to Cart</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Add to Kroger Cart</h1>
+        <form action="/Kroger/add-to-cart-result" method="POST">
+            <label for="item">Item:</label><br>
+            <input type="string" name="item"><br>
+            <label for="quantity">Quantity:</label><br>
+            <input type="number" name="quantity"><br>
+            <input type="submit" value="Submit">
+        </form>
+        <h2> Response: {{ result }}</h2>
+    </body>
+{% endblock %}
+</html>

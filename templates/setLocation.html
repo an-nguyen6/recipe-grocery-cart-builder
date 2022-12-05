@@ -1,0 +1,20 @@
+<html>
+{% extends "welcome.html" %}
+{% block content %}
+    <head>
+        <title>Set Preferred Location</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Set Preferred Location</h1>
+        <form action="/Kroger/set-preferred-location-result" method="POST">
+            <label for="zipcode">Zipcode:</label><br>
+            <input type="number" name="zipcode"><br>
+            <label for="chain">Chain:</label><br>
+            <input type="string" name="chain"><br>
+            <input type="submit" value="Submit">
+        </form>
+        <h2> Response: {{ result }}</h2>
+    </body>
+{% endblock %}
+</html>

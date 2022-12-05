@@ -1,0 +1,35 @@
+<html>
+{% extends "welcome.html" %}
+{% block content %}
+    <head>
+        <title>Food Search</title>
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Look up macros for a food item</h1>
+        <form action="\food-search-results" method="POST">
+            <label for="food">Food:</label><br>
+            <input type="string" name="food"><br>
+            <input type="submit" value="Submit">
+        </form>
+        <h2> Response: {{ message }}</h2>
+      <table id="data" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Results</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in result.items() %}
+            <tr>
+
+              <td>{{ key }}: {{ value }}</td>
+
+            </tr>
+
+          {% endfor %}
+        </tbody>
+      </table>
+    </body>
+{% endblock %}
+</html>
