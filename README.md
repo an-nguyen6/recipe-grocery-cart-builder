@@ -14,7 +14,7 @@ Chicagoland area) and add products to their cart.
 - Register for the Spoonacular API and get your API key and host
 - Register for the Kroger API and get your client ID and secret
 
-
+## Project proposals
 Project idea #1: Create an API to help people plan meals and buy groceries to meet their nutrition goals. 
 Things to implement:
 1. Take someone’s macronutrient preferences and using a nutrition facts API 
