@@ -26,7 +26,7 @@ def get_Kroger_location(zipcode=None, chain=None):
     response = requests.get(url, headers=headers, params=query_string)
     stores = response.json()
 
-    if len(stores['data']) == 0:
+    if 'data' not in stores or len(stores['data']) == 0:
         return "Try a different zipcode and/or chain"
 
     result = stores['data'][0]

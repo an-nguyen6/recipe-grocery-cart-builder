@@ -105,6 +105,7 @@ def kroger_sign_in():
     url = KrogerCustomer.kroger_sign_in()
     return url
 
+
 @app.get('/Kroger/access-code/', response_class=RedirectResponse)
 def get_kroger_token(code: str):
     token_dict = KrogerCustomer.get_token(code)
@@ -114,6 +115,7 @@ def get_kroger_token(code: str):
     url = app.url_path_for('get_add_to_cart')
     response = RedirectResponse(url=url)
     return response
+
 
 @app.get('/Kroger/refresh-customer-token/', response_class=RedirectResponse)
 def refresh_kroger_token():
@@ -129,17 +131,9 @@ def refresh_kroger_token():
     response = RedirectResponse(url=url)
     return response
 
-
-@app.get('/Kroger/login-successful')
-def kroger_login_successful():
-    return 'successfully logged in!'
-
-
-# for testing purposes only
-@app.get('/Kroger/all-codes')
-def get_kroger_tokens():
-    return app.db.all()
-    # return db
+# @app.get('/Kroger/login-successful')
+# def kroger_login_successful():
+#     return 'successfully logged in!'
 
 
 @app.get('/Kroger/set-preferred-location/', response_class=HTMLResponse)
@@ -152,16 +146,20 @@ def get_location(request: Request, result="Enter zipcode and chain"):
 def post_location(request: Request, zipcode : str = Form(), chain : str =
                         Form()):
     preferred_location = Kroger.get_Kroger_location(zipcode, chain)
-    app.db.put('preferred_location_id', preferred_location['locationId'])
-    app.db.put('preferred_location_chain', preferred_location['chain'])
-    app.db.put('preferred_location_address', preferred_location['address'])
-    result = f"Added preferred {app.db.get('preferred_location_chain')} at " \
-             f"{app.db.get('preferred_location_address')['addressLine1']} " \
-             f"{app.db.get('preferred_location_address')['city']} " \
-             f"{app.db.get('preferred_location_address')['state']} " \
-             f"{app.db.get('preferred_location_address')['zipCode']} "
+    if preferred_location != "Try a different zipcode and/or chain":
+        app.db.put('preferred_location_id', preferred_location['locationId'])
+        app.db.put('preferred_location_chain', preferred_location['chain'])
+        app.db.put('preferred_location_address', preferred_location['address'])
+        result = f"Added preferred {app.db.get('preferred_location_chain')} at " \
+                 f"{app.db.get('preferred_location_address')['addressLine1']} " \
+                 f"{app.db.get('preferred_location_address')['city']} " \
+                 f"{app.db.get('preferred_location_address')['state']} " \
+                 f"{app.db.get('preferred_location_address')['zipCode']} "
+    else:
+        result = "No location found. Try a different zipcode or chain."
     return templates.TemplateResponse('SetLocation.html', {"request": request,
-                                                           "result": result})
+                                                               "result": result})
+
 
 
 @app.get('/Kroger/add-to-cart/', response_class=HTMLResponse)
@@ -172,9 +170,7 @@ def get_add_to_cart(request: Request, result="Enter item and quantity"):
 @app.post('/Kroger/add-to-cart-result', response_class=RedirectResponse)
 def post_add_to_cart(request: Request, item : str = Form(), quantity : int =
                         Form()):
-    # if no preferred location, get location using zipcode and chain and save
-    # check product availability at preferred location id
-    # if available, then add to cart
+    # if user not signed in to Kroger, then redirect them to the sign-in page
     if 'kroger_access_token' not in app.db.all():
         url = app.url_path_for('kroger_sign_in')
         response = RedirectResponse(url=url)
@@ -188,6 +184,7 @@ def post_add_to_cart(request: Request, item : str = Form(), quantity : int =
         updated_refresh = app.db.get('refreshed') + 1
         app.db.put('refreshed', updated_refresh)
 
+    # if no preferred location set, then redirect them to set it
     if 'preferred_location_id' in app.db.all():
         location_id = app.db.get('preferred_location_id')
     else:
@@ -196,6 +193,7 @@ def post_add_to_cart(request: Request, item : str = Form(), quantity : int =
         response.status_code = 301
         return response
 
+    # add item to cart if it's available
     availability_details = Kroger.check_product_availability(item, location_id)
 
     if availability_details[0]:
